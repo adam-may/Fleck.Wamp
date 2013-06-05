@@ -1,0 +1,3 @@
+[submodule "external/Fleck"]
+	path = external/Fleck
+	url = git://github.com/statianzo/Fleck.git
