@@ -41,11 +41,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="IWampConnection.cs" />
-    <Compile Include="IWampServer.cs" />
+    <Compile Include="IWampCommsHandler.cs" />
     <Compile Include="Messages.cs" />
     <Compile Include="WampConnection.cs" />
-    <Compile Include="WampJsonConverter.cs" />
-    <Compile Include="WampServer.cs" />
+    <Compile Include="Json\WampJsonConverter.cs" />
+    <Compile Include="WampCommsHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

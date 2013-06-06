@@ -2,7 +2,7 @@
 
 namespace Fleck.Wamp
 {
-    public interface IWampServer
+    public interface IWampCommsHandler
     {
         void Start(Action<IWampConnection> config);
     }

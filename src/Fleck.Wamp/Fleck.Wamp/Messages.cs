@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Fleck.Wamp.Json;
 using Newtonsoft.Json;
 
 namespace Fleck.Wamp
@@ -17,11 +18,16 @@ namespace Fleck.Wamp
         Event
     }
 
-    [JsonObject]
-    public class WampMessage
+    [JsonConverter(typeof(WampJsonConverter))]
+    public interface IWampMessage
+    {
+        MessageType MessageType { get; }
+    }
+
+    public class WampMessage : IWampMessage
     {
         [JsonProperty(Order = 1)]
-        public MessageType MessageType { get; protected set; }
+        public MessageType MessageType { get; internal set; }
     }
 
     public class EventMessage : WampMessage
@@ -108,7 +114,7 @@ namespace Fleck.Wamp
         public Uri Uri { get; set; }
     }
 
-    [JsonObject]
+    [JsonConverter(typeof(WampJsonConverter))]
     public class WelcomeMessage : WampMessage
     {
         public WelcomeMessage()
@@ -116,9 +122,9 @@ namespace Fleck.Wamp
             MessageType = MessageType.Welcome;
         }
         [JsonProperty(Order = 2)]
-        public string SessionId { get; set; }
+        public Guid SessionId { get; set; }
         [JsonProperty(Order = 3)]
-        public int ProtocolVersion { get; set; }
+        public long ProtocolVersion { get; set; }
         [JsonProperty(Order = 4)]
         public string ServerIdentity { get; set; }
     }
