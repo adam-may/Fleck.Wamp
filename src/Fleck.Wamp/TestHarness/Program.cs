@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 using Fleck;
 using Fleck.Wamp;
+using Newtonsoft.Json;
 
 namespace TestHarness
 {
@@ -13,6 +14,11 @@ namespace TestHarness
     {
         static void Main(string[] args)
         {
+            var converter = new WampJsonConverter();
+            var msg = new WelcomeMessage() {ProtocolVersion = 1, ServerIdentity = "Test/1.0.0", SessionId = "v59mbCGDXZ7WTyxB"};
+            var result = JsonConvert.SerializeObject(msg);
+            var test = JsonConvert.DeserializeObject<WampMessage>(result);
+
             FleckLog.Level = LogLevel.Debug;
             var allSockets = new List<IWebSocketConnection>();
             var server = new WampServer("ws://localhost:8181");

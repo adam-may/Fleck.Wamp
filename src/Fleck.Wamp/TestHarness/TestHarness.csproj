@@ -52,6 +52,10 @@
       <Project>{8b12d929-afa9-4307-beff-2ed0f1070fee}</Project>
       <Name>Fleck %28external\Fleck\Fleck%29</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\external\Newtonsoft.Json\Src\Newtonsoft.Json\Newtonsoft.Json.csproj">
+      <Project>{eeea67f9-9089-481d-a4dc-0966dec9fd7d}</Project>
+      <Name>Newtonsoft.Json %28external\Newtonsoft.Json\Newtonsoft.Json%29</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Fleck.Wamp\Fleck.Wamp.csproj">
       <Project>{cde46555-b9c7-48f3-8a4e-5183380b5749}</Project>
       <Name>Fleck.Wamp</Name>

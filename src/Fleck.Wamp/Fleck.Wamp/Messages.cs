@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace Fleck.Wamp
 {
@@ -19,103 +17,109 @@ namespace Fleck.Wamp
         Event
     }
 
-    public interface IWampMessage
+    [JsonObject]
+    public class WampMessage
     {
-        MessageType MessageType { get; }
+        [JsonProperty(Order = 1)]
+        public MessageType MessageType { get; protected set; }
     }
 
-    public class EventMessage : IWampMessage
+    public class EventMessage : WampMessage
     {
-        public MessageType MessageType
+        public EventMessage()
         {
-            get { return MessageType.Event; }
+            MessageType = MessageType.Event;
         }
-        public Uri TopicUri { get; private set; }
-        public object Event { get; private set; }
+        public Uri TopicUri { get; set; }
+        public object Event { get; set; }
     }
 
-    public class PublishMessage : IWampMessage
+    public class PublishMessage : WampMessage
     {
-        public MessageType MessageType
+        public PublishMessage()
         {
-            get { return MessageType.Publish; }
+            MessageType = MessageType.Publish;
         }
-        public Uri TopicUri { get; private set; }
-        public object Event { get; private set; }
-        public bool ExcludeMe { get; private set; }
-        public IEnumerable<string> Exclude { get; private set; }
-        public IEnumerable<string> Eligible { get; private set; }
+        public Uri TopicUri { get; set; }
+        public object Event { get; set; }
+        public bool ExcludeMe { get; set; }
+        public IEnumerable<string> Exclude { get; set; }
+        public IEnumerable<string> Eligible { get; set; }
     }
 
-    public class UnsubscribeMessage : IWampMessage
+    public class UnsubscribeMessage : WampMessage
     {
-        public MessageType MessageType
+        public UnsubscribeMessage()
         {
-            get { return MessageType.Unsubscribe; }
+            MessageType = MessageType.Unsubscribe;
         }
-        public Uri TopicUri { get; private set; }
+        public Uri TopicUri { get; set; }
     }
 
-    public class SubscribeMessage : IWampMessage
+    public class SubscribeMessage : WampMessage
     {
-        public MessageType MessageType
+        public SubscribeMessage()
         {
-            get { return MessageType.Subscribe; }
+            MessageType = MessageType.Subscribe;
         }
-        public Uri TopicUri { get; private set; }
+        public Uri TopicUri { get; set; }
     }
 
-    public class CallErrorMessage : IWampMessage
+    public class CallErrorMessage : WampMessage
     {
-        public MessageType MessageType
+        public CallErrorMessage()
         {
-            get { return MessageType.CallError; }
+            MessageType = MessageType.CallError;
         }
-        public string CallId { get; private set; }
-        public Uri ErrorUri { get; private set; }
-        public string ErrorDescription { get; private set; }
-        public string ErrorDetails { get; private set; }
+        public string CallId { get; set; }
+        public Uri ErrorUri { get; set; }
+        public string ErrorDescription { get; set; }
+        public string ErrorDetails { get; set; }
     }
 
-    public class CallResultMessage : IWampMessage
+    public class CallResultMessage : WampMessage
     {
-        public MessageType MessageType
+        public CallResultMessage()
         {
-            get { return MessageType.CallResult; }
+            MessageType = MessageType.CallResult;
         }
-        public string CallId { get; private set; }
-        public object[] Result { get; private set; }
+        public string CallId { get; set; }
+        public object[] Result { get; set; }
     }
 
-    public class CallMessage : IWampMessage
+    public class CallMessage : WampMessage
     {
-        public MessageType MessageType
+        public CallMessage()
         {
-            get { return MessageType.Call; }
+            MessageType = MessageType.Call;
         }
-        public string CallId { get; private set; }
-        public Uri ProcUri { get; private set; }
-        public object[] Parameters { get; private set; }
+        public string CallId { get; set; }
+        public Uri ProcUri { get; set; }
+        public object[] Parameters { get; set; }
     }
 
-    public class PrefixMessage : IWampMessage
+    public class PrefixMessage : WampMessage
     {
-        public MessageType MessageType
+        public PrefixMessage()
         {
-            get { return MessageType.Prefix; }
+            MessageType = MessageType.Prefix;
         }
-        public string Prefix { get; private set; }
-        public Uri Uri { get; private set; }
+        public string Prefix { get; set; }
+        public Uri Uri { get; set; }
     }
 
-    public class WelcomeMessage : IWampMessage
+    [JsonObject]
+    public class WelcomeMessage : WampMessage
     {
-        public MessageType MessageType
+        public WelcomeMessage()
         {
-            get { return MessageType.Welcome; }
+            MessageType = MessageType.Welcome;
         }
-        public string SessionId { get; private set; }
-        public string ProtocolVersion { get; private set; }
-        public string ServerIdentity { get; private set; }
+        [JsonProperty(Order = 2)]
+        public string SessionId { get; set; }
+        [JsonProperty(Order = 3)]
+        public int ProtocolVersion { get; set; }
+        [JsonProperty(Order = 4)]
+        public string ServerIdentity { get; set; }
     }
 }
