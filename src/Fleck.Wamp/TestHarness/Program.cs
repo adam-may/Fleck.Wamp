@@ -11,33 +11,29 @@ namespace TestHarness
         static void Main()
         {
             FleckLog.Level = LogLevel.Debug;
-            var allSockets = new List<IWebSocketConnection>();
-            var server = new WampCommsHandler("ws://localhost:8181");
+            var allSockets = new List<IWampConnection>();
+            var server = new WampServer("ws://localhost:8181");
             server.Start(wamp =>
                 {
-                    wamp.OnWelcome = msg => OnWelcome(wamp, msg);
-                    wamp.OnPrefix = msg => OnPrefix(wamp, msg);
+                    wamp.OnEvent = OnEvent;
+                    wamp.OnCall = OnCall;
                 });
 
             var input = Console.ReadLine();
             while (input != "exit")
             {
-                foreach (var socket in allSockets.ToList())
-                {
-                    socket.Send(input);
-                }
                 input = Console.ReadLine();
             }
         }
 
-        private static void OnPrefix(IWampConnection wampConnection, PrefixMessage msg)
+        private static void OnCall(CallMessage callMessage)
         {
-            throw new NotImplementedException();
+            Console.WriteLine("Event message received: {0}", callMessage.CallId);
         }
 
-        private static void OnWelcome(IWampConnection connection, WelcomeMessage msg)
+        private static void OnEvent(EventMessage eventMessage)
         {
-            Console.WriteLine("Welcome message received");
+            Console.WriteLine("Event message received: {0}", eventMessage.Event);
         }
     }
 }

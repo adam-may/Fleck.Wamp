@@ -81,10 +81,26 @@ namespace Fleck.Wamp.Json
             }
         }
 
-        private static void SetValue(PropertyInfo p, object target, object value)
+        private static object ConvertValueToType(PropertyInfo propertyInfo, params object[] value)
         {
-            p.SetValue(target, p.PropertyType.IsEnum ? Enum.Parse(p.PropertyType, value.ToString()) : value);
+            if (propertyInfo == typeof(string))
+                return value;
+
+            if (value == null)
+                return null;
+
+            if (propertyInfo.PropertyType.IsEnum)
+                return Enum.Parse(propertyInfo.PropertyType, value.ToString());
+
+            if (propertyInfo.PropertyType == typeof(Uri))
+                return new Uri(value.ToString());
+
+            return value;
         }
 
+        private static void SetValue(PropertyInfo p, object target, object value)
+        {
+            p.SetValue(target, ConvertValueToType(p, value));
+        }
     }
 }

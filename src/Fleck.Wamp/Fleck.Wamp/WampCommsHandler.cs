@@ -7,32 +7,14 @@ namespace Fleck.Wamp
     public class WampCommsHandler : IWampCommsHandler
     {
         private readonly WebSocketServer _webSocketServer;
-        private const int DefaultListeningPort = 8181;
         private const string WampSubProtocol = "wamp";
-        private const int ProtocolVersionConst = 1;
-
-        public int ProtocolVersion
-        {
-            get { return ProtocolVersionConst; }
-        }
-        public string ServerIdentity { get; set; }
 
         public WampCommsHandler(int port, string location)
         {
-            var assemblyName = Assembly.GetExecutingAssembly().GetName();
-            ServerIdentity = String.Format("{0}/{1}.{2}.{3}",
-                assemblyName.Name,
-                assemblyName.Version.Major,
-                assemblyName.Version.Minor,
-                assemblyName.Version.Build);
-
             _webSocketServer = new WebSocketServer(port, location);
         }
 
-        public WampCommsHandler(string location)
-            : this(DefaultListeningPort, location)
-        {
-        }
+        public string ServerIdentity { get; set; }
 
         public void Start(Action<IWampConnection> config)
         {
@@ -47,7 +29,7 @@ namespace Fleck.Wamp
 
                 var connection = new WampConnection(socket, config);
 
-                socket.OnOpen = () => HandleOnOpen(connection);
+                socket.OnOpen = connection.OnOpen;
                 socket.OnClose = connection.OnClose;
                 socket.OnMessage = msg => OnMessage(connection, msg);
             });            
@@ -77,17 +59,6 @@ namespace Fleck.Wamp
                 default:
                     throw new ArgumentException("msg");
             }
-        }
-
-        private void HandleOnOpen(IWampConnection connection)
-        {
-            var message = new WelcomeMessage()
-                {
-                    SessionId = connection.WebSocketConnectionInfo.Id,
-                    ProtocolVersion = ProtocolVersion,
-                    ServerIdentity = ServerIdentity
-                };
-            connection.SendWelcome(message);
         }
     }
 }
