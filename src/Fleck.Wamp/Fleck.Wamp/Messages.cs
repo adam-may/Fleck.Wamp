@@ -42,7 +42,7 @@ namespace Fleck.Wamp
         [JsonProperty(Order = 2)]
         public Uri TopicUri { get; set; }
         [JsonProperty(Order = 3)]
-        public object Event { get; set; }
+        public object[] Event { get; set; }
     }
 
     [JsonConverter(typeof(WampJsonConverter))]
@@ -52,16 +52,17 @@ namespace Fleck.Wamp
         {
             MessageType = MessageType.Publish;
         }
+        [JsonConverter(typeof(UriConverter))]
         [JsonProperty(Order = 2)]
         public Uri TopicUri { get; set; }
         [JsonProperty(Order = 3)]
-        public object Event { get; set; }
+        public object[] Event { get; set; }
         [JsonProperty(Order = 4)]
         public bool ExcludeMe { get; set; }
         [JsonProperty(Order = 5)]
-        public IEnumerable<string> Exclude { get; set; }
+        public IEnumerable<Guid> Exclude { get; set; }
         [JsonProperty(Order = 6)]
-        public IEnumerable<string> Eligible { get; set; }
+        public IEnumerable<Guid> Eligible { get; set; }
     }
 
     [JsonConverter(typeof(WampJsonConverter))]
@@ -71,6 +72,7 @@ namespace Fleck.Wamp
         {
             MessageType = MessageType.Unsubscribe;
         }
+        [JsonConverter(typeof(UriConverter))]
         [JsonProperty(Order = 2)]
         public Uri TopicUri { get; set; }
     }
@@ -82,6 +84,7 @@ namespace Fleck.Wamp
         {
             MessageType = MessageType.Subscribe;
         }
+        [JsonConverter(typeof(UriConverter))]
         [JsonProperty(Order = 2)]
         public Uri TopicUri { get; set; }
     }
@@ -95,12 +98,13 @@ namespace Fleck.Wamp
         }
         [JsonProperty(Order = 2)]
         public string CallId { get; set; }
+        [JsonConverter(typeof(UriConverter))]
         [JsonProperty(Order = 3)]
         public Uri ErrorUri { get; set; }
         [JsonProperty(Order = 4)]
         public string ErrorDescription { get; set; }
         [JsonProperty(Order = 5)]
-        public string ErrorDetails { get; set; }
+        public object[] ErrorDetails { get; set; }
     }
 
     [JsonConverter(typeof(WampJsonConverter))]
@@ -125,8 +129,10 @@ namespace Fleck.Wamp
         }
         [JsonProperty(Order = 2)]
         public string CallId { get; set; }
+        [JsonConverter(typeof(UriConverter))]
         [JsonProperty(Order = 3)]
         public Uri ProcUri { get; set; }
+        [JsonConverter(typeof(ObjectArrayConverter))]
         [JsonProperty(Order = 4)]
         public object[] Parameters { get; set; }
     }
@@ -140,6 +146,7 @@ namespace Fleck.Wamp
         }
         [JsonProperty(Order = 2)]
         public string Prefix { get; set; }
+        [JsonConverter(typeof(UriConverter))]
         [JsonProperty(Order = 3)]
         public Uri Uri { get; set; }
     }
@@ -151,6 +158,7 @@ namespace Fleck.Wamp
         {
             MessageType = MessageType.Welcome;
         }
+        [JsonConverter(typeof(GuidConverter))]
         [JsonProperty(Order = 2)]
         public Guid SessionId { get; set; }
         [JsonProperty(Order = 3)]

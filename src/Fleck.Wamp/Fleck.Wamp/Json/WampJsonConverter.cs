@@ -8,6 +8,9 @@ using Newtonsoft.Json.Serialization;
 
 namespace Fleck.Wamp.Json
 {
+    /// <summary>
+    /// Based upon http://stackoverflow.com/questions/6997502/property-based-type-resolution-in-json-net
+    /// </summary>
     public class WampJsonConverter : JsonConverter
     {
         public override bool CanConvert(Type objectType)
@@ -24,43 +27,106 @@ namespace Fleck.Wamp.Json
             // We first deserialize to and object array, then we'll set the properties on the 
             // target object to match
             var jsonObject = JArray.Load(reader);
-            var objects = new List<object>();
-            serializer.Populate(jsonObject.CreateReader(), objects);
-            
             var target = GetType(jsonObject);
-            var objectArray = objects.ToArray();
+            var r = jsonObject.CreateReader();
 
-            var props = GetOrderedJsonProperties(target);
+            var properties = GetOrderedProperties(target);
 
-            foreach (var prop in props)
-                SetValue(prop.Item2, target, objectArray[prop.Item1 - 1]);
+            // The first item is the opening read marks, so we read past this
+            if (r.TokenType == JsonToken.None)
+                r.Read();
+
+            if (r.TokenType != JsonToken.StartArray)
+                throw new JsonSerializationException("Invalid message. Needs to be a JSON Array");
+
+            foreach (var property in properties)
+            {
+                if (!r.Read())
+                    throw new JsonSerializationException("Problem deserializing");
+
+                var value = new ReflectionValueProvider(property);
+
+                if (property.PropertyType == typeof (object[]))
+                {
+                    if (r.TokenType == JsonToken.StartObject)
+                    {
+                        value.SetValue(target, new object[] {serializer.Deserialize<Dictionary<string, object>>(r)});
+                    }
+                    else
+                    {
+                        var objs = new List<object>();
+                        if (r.TokenType != JsonToken.EndArray)
+                            objs.Add(GetObjectArrayType(serializer, r));
+                        while (r.Read())
+                            if (IsWritableTokenType(r.TokenType))
+                                objs.Add(GetObjectArrayType(serializer, r));
+                        value.SetValue(target, ConvertValueToType(property, objs.ToArray()));
+                    }
+                }
+                else
+                {
+                    var val = serializer.Deserialize(r);
+                    value.SetValue(target, ConvertValueToType(property, val));
+                }
+            }
 
             return target;
         }
 
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        private static object GetObjectArrayType(JsonSerializer serializer, JsonReader r)
+        {
+            return r.TokenType == JsonToken.StartObject
+                       ? serializer.Deserialize<Dictionary<string, object>>(r)
+                       : serializer.Deserialize(r);
+        }
+
+        private static bool IsWritableTokenType(JsonToken token)
+        {
+            return token == JsonToken.Boolean ||
+                   token == JsonToken.Date ||
+                   token == JsonToken.Float ||
+                   token == JsonToken.Integer ||
+                   token == JsonToken.PropertyName ||
+                   token == JsonToken.String ||
+                   token == JsonToken.StartObject ||
+                   token == JsonToken.StartArray;
+        }
+
+        public override void WriteJson(JsonWriter writer, object target, JsonSerializer serializer)
         {
             writer.WriteStartArray();
-            var props = GetOrderedJsonProperties(value);
+            var properties = GetOrderedProperties(target);
 
-            foreach (var prop in props)
-                writer.WriteValue(prop.Item2.GetValue(value));
+            foreach (var property in properties)
+            {
+                var value = new ReflectionValueProvider(property);
 
+                if (property.PropertyType == typeof (object[]))
+                {
+                    foreach (var v in value.GetValue(target) as object[])
+                    {
+                        serializer.Serialize(writer, v);
+                    }
+                }
+                else
+                {
+                    serializer.Serialize(writer, value.GetValue(target));
+                }
+            }
             writer.WriteEndArray();
         }
 
-        private IEnumerable<Tuple<int, PropertyInfo>> GetOrderedJsonProperties(object target)
+        private static IEnumerable<PropertyInfo> GetOrderedProperties(object target)
         {
             return target.GetType()
                          .GetProperties()
                          .Select(p =>
                              {
-                                 var a =
-                                     p.GetCustomAttributes(typeof (JsonPropertyAttribute), true).First() as
-                                     JsonPropertyAttribute;
-                                 return Tuple.Create(a.Order, p);
+                                 var attr = p.GetCustomAttribute(typeof(JsonPropertyAttribute), true) as JsonPropertyAttribute;
+                                 return attr != null ? new { attr.Order, PropertyInfo = p } : null;
                              })
-                         .OrderBy(p => p.Item1);
+                         .OrderBy(p => p.Order)
+                         .Select(p => p.PropertyInfo);
         }
 
         private static IWampMessage GetType(IEnumerable<JToken> jArray)
@@ -81,13 +147,13 @@ namespace Fleck.Wamp.Json
             }
         }
 
-        private static object ConvertValueToType(PropertyInfo propertyInfo, params object[] value)
+        private static object ConvertValueToType(PropertyInfo propertyInfo, object value)
         {
-            if (propertyInfo == typeof(string))
-                return value;
-
             if (value == null)
                 return null;
+
+            if (propertyInfo == typeof(string) || propertyInfo == typeof(object[]))
+                return value;
 
             if (propertyInfo.PropertyType.IsEnum)
                 return Enum.Parse(propertyInfo.PropertyType, value.ToString());
@@ -95,12 +161,10 @@ namespace Fleck.Wamp.Json
             if (propertyInfo.PropertyType == typeof(Uri))
                 return new Uri(value.ToString());
 
-            return value;
-        }
+            if (propertyInfo.PropertyType == typeof(Guid))
+                return new Guid(value.ToString());
 
-        private static void SetValue(PropertyInfo p, object target, object value)
-        {
-            p.SetValue(target, ConvertValueToType(p, value));
+            return Convert.ChangeType(value, propertyInfo.PropertyType);
         }
     }
 }

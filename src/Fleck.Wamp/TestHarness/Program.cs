@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Fleck;
 using Fleck.Wamp;
+using Fleck.Wamp.Json;
+using Newtonsoft.Json;
 
 namespace TestHarness
 {
@@ -11,7 +13,6 @@ namespace TestHarness
         static void Main()
         {
             FleckLog.Level = LogLevel.Debug;
-            var allSockets = new List<IWampConnection>();
             var server = new WampServer("ws://localhost:8181");
             server.Start(wamp =>
                 {
