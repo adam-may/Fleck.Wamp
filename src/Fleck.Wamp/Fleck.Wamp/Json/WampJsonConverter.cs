@@ -41,10 +41,21 @@ namespace Fleck.Wamp.Json
 
             foreach (var property in properties)
             {
+                var value = new ReflectionValueProvider(property);
+
+                switch (r.TokenType)
+                {
+                    case JsonToken.None:
+                    case JsonToken.EndArray:
+                    case JsonToken.EndObject:
+                        // Setting the value to null here is like setting it to default(Type) as it internally 
+                        // handles Value vs Reference Types
+                        value.SetValue(target, null);
+                        continue;
+                }
+
                 if (!r.Read())
                     throw new JsonSerializationException("Problem deserializing");
-
-                var value = new ReflectionValueProvider(property);
 
                 if (property.PropertyType == typeof (object[]))
                 {
@@ -107,6 +118,12 @@ namespace Fleck.Wamp.Json
                     {
                         serializer.Serialize(writer, v);
                     }
+                }
+                else if (property.PropertyType == typeof(IEnumerable<Guid>) || Nullable.GetUnderlyingType(property.PropertyType) != null)
+                {
+                    var val = value.GetValue(target);
+                    if (val != null)
+                        serializer.Serialize(writer, val);
                 }
                 else
                 {

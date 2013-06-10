@@ -45,7 +45,6 @@
     <Compile Include="IWampServer.cs" />
     <Compile Include="IWampServerConnection.cs" />
     <Compile Include="Json\GuidConverter.cs" />
-    <Compile Include="Json\ObjectArrayConverter.cs" />
     <Compile Include="Json\UriConverter.cs" />
     <Compile Include="Messages.cs" />
     <Compile Include="WampConnection.cs" />

@@ -58,7 +58,7 @@ namespace Fleck.Wamp
         [JsonProperty(Order = 3)]
         public object[] Event { get; set; }
         [JsonProperty(Order = 4)]
-        public bool ExcludeMe { get; set; }
+        public bool? ExcludeMe { get; set; }
         [JsonProperty(Order = 5)]
         public IEnumerable<Guid> Exclude { get; set; }
         [JsonProperty(Order = 6)]
@@ -132,7 +132,6 @@ namespace Fleck.Wamp
         [JsonConverter(typeof(UriConverter))]
         [JsonProperty(Order = 3)]
         public Uri ProcUri { get; set; }
-        [JsonConverter(typeof(ObjectArrayConverter))]
         [JsonProperty(Order = 4)]
         public object[] Parameters { get; set; }
     }
