@@ -12,15 +12,19 @@ namespace Fleck.Wamp.Tests
         private Mock<IWebSocketServer> _serverMock;
         private Mock<IWebSocketConnection> _connMock;
         private Mock<IWebSocketConnectionInfo> _connInfoMock;
+        private Guid _connGuid;
 
         [TestFixtureSetUp]
         public void Setup()
         {
+            _connGuid = Guid.NewGuid();
+
             _connInfoMock = new Mock<IWebSocketConnectionInfo>();
             _connMock = new Mock<IWebSocketConnection>();
             _serverMock = new Mock<IWebSocketServer>();
 
             _connInfoMock.SetupGet(x => x.SubProtocol).Returns("wamp");
+            _connInfoMock.SetupGet(x => x.Id).Returns(_connGuid);
 
             _connMock.SetupGet(x => x.ConnectionInfo).Returns(_connInfoMock.Object);
             _connMock.SetupAllProperties();

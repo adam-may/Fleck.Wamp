@@ -7,8 +7,14 @@ namespace Fleck.Wamp
     {
         private readonly IWampConnection _wampConnection;
 
-        public WampServerConnection(IWampConnection wampConnection)
+        public WampServerConnection(IWampConnection wampConnection, Action<IWampServerConnection> initialize)
         {
+            OnCall = message => { };
+            OnCallResult = message => { };
+            OnCallError = message => { };
+            OnEvent = message => { };
+            initialize(this);
+
             _wampConnection = wampConnection;
         }
 

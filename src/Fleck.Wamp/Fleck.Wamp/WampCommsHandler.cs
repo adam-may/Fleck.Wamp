@@ -7,17 +7,18 @@ namespace Fleck.Wamp
 {
     public class WampCommsHandler : IWampCommsHandler
     {
+        private const int DefaultListeningPort = 8181;
         private readonly IWebSocketServer _webSocketServer;
         private const string WampSubProtocol = "wamp";
 
         public WampCommsHandler(string location)
+            : this(DefaultListeningPort, location)
         {
-            _webSocketServer = new WebSocketServer(location);
         }
 
         public WampCommsHandler(int port, string location)
+            : this (new WebSocketServer(port, location))
         {
-            _webSocketServer = new WebSocketServer(port, location);
         }
 
         public WampCommsHandler(IWebSocketServer webSocketServer)
