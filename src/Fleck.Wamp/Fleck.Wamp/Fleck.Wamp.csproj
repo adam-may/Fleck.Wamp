@@ -40,10 +40,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="IWampConnection.cs" />
-    <Compile Include="IWampCommsHandler.cs" />
-    <Compile Include="IWampServer.cs" />
-    <Compile Include="IWampServerConnection.cs" />
+    <Compile Include="Interfaces\IWampConnection.cs" />
+    <Compile Include="Interfaces\IWampCommsHandler.cs" />
+    <Compile Include="Interfaces\IWampServer.cs" />
+    <Compile Include="Interfaces\IWampServerConnection.cs" />
     <Compile Include="Json\GuidConverter.cs" />
     <Compile Include="Json\UriConverter.cs" />
     <Compile Include="Messages.cs" />

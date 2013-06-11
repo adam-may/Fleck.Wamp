@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using Fleck.Wamp.Interfaces;
 using Newtonsoft.Json;
 
 namespace Fleck.Wamp

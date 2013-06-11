@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Fleck.Wamp
+namespace Fleck.Wamp.Interfaces
 {
     public interface IWampCommsHandler
     {
