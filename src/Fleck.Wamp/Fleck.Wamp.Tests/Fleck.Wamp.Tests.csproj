@@ -47,8 +47,13 @@
   <ItemGroup>
     <Compile Include="Json\WampJsonConverterTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="WampCommsHandlerTests.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\external\Fleck\src\Fleck\Fleck.csproj">
+      <Project>{8b12d929-afa9-4307-beff-2ed0f1070fee}</Project>
+      <Name>Fleck %28external\Fleck\Fleck%29</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\external\Newtonsoft.Json\Src\Newtonsoft.Json\Newtonsoft.Json.csproj">
       <Project>{eeea67f9-9089-481d-a4dc-0966dec9fd7d}</Project>
       <Name>Newtonsoft.Json %28external\Newtonsoft.Json\Newtonsoft.Json%29</Name>

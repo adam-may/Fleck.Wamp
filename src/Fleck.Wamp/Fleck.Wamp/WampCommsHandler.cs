@@ -6,12 +6,22 @@ namespace Fleck.Wamp
 {
     public class WampCommsHandler : IWampCommsHandler
     {
-        private readonly WebSocketServer _webSocketServer;
+        private readonly IWebSocketServer _webSocketServer;
         private const string WampSubProtocol = "wamp";
+
+        public WampCommsHandler(string location)
+        {
+            _webSocketServer = new WebSocketServer(location);
+        }
 
         public WampCommsHandler(int port, string location)
         {
             _webSocketServer = new WebSocketServer(port, location);
+        }
+
+        public WampCommsHandler(IWebSocketServer webSocketServer)
+        {
+            _webSocketServer = webSocketServer;
         }
 
         public string ServerIdentity { get; set; }
@@ -23,7 +33,7 @@ namespace Fleck.Wamp
                 if (socket == null)
                     throw new ArgumentNullException("socket");
                 if (socket.ConnectionInfo == null) 
-                    throw new ArgumentNullException("ConnectionInfo");
+                    throw new ArgumentNullException("socket.ConnectionInfo");
                 if (!socket.ConnectionInfo.SubProtocol.Equals(WampSubProtocol))
                     throw new ArgumentException("SubProtocol");
 

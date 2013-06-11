@@ -9,7 +9,6 @@ namespace Fleck.Wamp
 
         public WampConnection(IWebSocketConnection webSocketConnection, Action<IWampConnection> initialize)
         {
-            _webSocketConnection = webSocketConnection;
             OnOpen = () => { };
             OnClose = () => { };
             OnWelcome = message => { };
@@ -19,6 +18,10 @@ namespace Fleck.Wamp
             OnUnsubscribe = message => { };
             OnPublish = message => { };
             initialize(this);
+
+            _webSocketConnection = webSocketConnection;
+            _webSocketConnection.OnOpen = () => OnOpen();
+            _webSocketConnection.OnClose = () => OnClose();
         }
 
         public IWebSocketConnectionInfo WebSocketConnectionInfo

@@ -28,7 +28,7 @@ namespace Fleck.Wamp
     public class WampMessage : IWampMessage
     {
         [JsonProperty(Order = 1)]
-        public MessageType MessageType { get; internal set; }
+        public MessageType MessageType { get; protected set; }
     }
 
     [JsonConverter(typeof(WampJsonConverter))]

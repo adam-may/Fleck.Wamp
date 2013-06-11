@@ -22,7 +22,7 @@ namespace Fleck.Wamp.Tests.Json
         }
 
         [Test]
-        public void TestWelcomeMessage()
+        public void TestWelcomeMessageSerialization()
         {
             const int protocolVersion = 1;
             const string serverIdentity = "Autobahn/0.5.1";
@@ -43,7 +43,7 @@ namespace Fleck.Wamp.Tests.Json
         [TestCase("calc", "http://example.com/simple/calc#")]
         [TestCase("keyvalue", "http://example.com/simple/keyvalue#")]
         [Test]
-        public void TestPrefixMessage(string prefix, string uriString)
+        public void TestPrefixMessageSerialization(string prefix, string uriString)
         {
             var uri = new Uri(uriString);
             var msg = String.Format("[1,\"{0}\",\"{1}\"]", prefix, uri);
@@ -66,7 +66,7 @@ namespace Fleck.Wamp.Tests.Json
         [TestCase("[2,\"{0}\",\"api:sum\",[9,1,3,4]]")]
         [TestCase("[2,\"{0}\",\"keyvalue:set\",\"foobar\",{{\"value1\":\"23\",\"value2\":\"singsing\",\"value3\":true,\"modified\":\"2012-03-29T10:29:16.625Z\"}}]")]
         [Test]
-        public void TestCallMessage(string message)
+        public void TestCallMessageSerialization(string message)
         {
             var msg = String.Format(message, _guid);
             var o = JsonConvert.DeserializeObject<IWampMessage>(msg) as CallMessage;
@@ -84,7 +84,7 @@ namespace Fleck.Wamp.Tests.Json
         [TestCase("[3,\"{0}\",\"Awesome result ..\"]")]
         [TestCase("[3,\"{0}\",{{\"value3\":true,\"value2\":\"singsing\",\"value1\":\"23\",\"modified\":\"2012-03-29T10:29:16.625Z\"}}]")]
         [Test]
-        public void TestCallResultMessage(string message)
+        public void TestCallResultMessageSerialization(string message)
         {
             var msg = String.Format(message, _guid);
             var o = JsonConvert.DeserializeObject<IWampMessage>(msg) as CallResultMessage;
@@ -102,7 +102,7 @@ namespace Fleck.Wamp.Tests.Json
         [TestCase("[4,\"{0}\",\"http://example.com/error#number_too_big\",\"1001 too big for me, max is 1000\",1000]")]
         [TestCase("[4,\"{0}\",\"http://example.com/error#invalid_numbers\",\"one or more numbers are multiples of 3\",[0,3]]")]
         [Test]
-        public void TestCallErrorMessage(string message)
+        public void TestCallErrorMessageSerialization(string message)
         {
             var msg = String.Format(message, _guid);
             var o = JsonConvert.DeserializeObject<IWampMessage>(msg) as CallErrorMessage;
@@ -119,7 +119,7 @@ namespace Fleck.Wamp.Tests.Json
         [TestCase("[5,\"http://example.com/simple\"]")]
         [TestCase("[5,\"event:myevent1\"]")]
         [Test]
-        public void TestSubscribeMessage(string message)
+        public void TestSubscribeMessageSerialization(string message)
         {
             var msg = String.Format(message, _guid);
             var o = JsonConvert.DeserializeObject<IWampMessage>(msg) as SubscribeMessage;
@@ -135,7 +135,7 @@ namespace Fleck.Wamp.Tests.Json
         [TestCase("[6,\"http://example.com/simple\"]")]
         [TestCase("[6,\"event:myevent1\"]")]
         [Test]
-        public void TestUnsubscribeMessage(string message)
+        public void TestUnsubscribeMessageSerialization(string message)
         {
             var msg = String.Format(message, _guid);
             var o = JsonConvert.DeserializeObject<IWampMessage>(msg) as UnsubscribeMessage;
@@ -154,7 +154,7 @@ namespace Fleck.Wamp.Tests.Json
         [TestCase("[7,\"event:myevent1\",\"hello\",[\"{0}\",\"{1}\"]]")]
         [TestCase("[7,\"event:myevent1\",\"hello\",[],[\"{0}\"]]")]    
         [Test]
-        public void TestPublishMessage(string message)
+        public void TestPublishMessageSerialization(string message)
         {
             var guid1 = Guid.NewGuid();
             var msg = String.Format(message, _guid, guid1);
@@ -172,7 +172,7 @@ namespace Fleck.Wamp.Tests.Json
         [TestCase("[8,\"http://example.com/simple\",null]")]
         [TestCase("[8,\"http://example.com/event#myevent2\",{{\"rand\":0.091870327345758618,\"flag\":false,\"num\":23,\"name\":\"Kross\",\"created\":\"2012-03-29T10:41:09.864Z\"}}]")]
         [Test]
-        public void TestEventMessage(string message)
+        public void TestEventMessageSerialization(string message)
         {
             var msg = String.Format(message, _guid);
             var o = JsonConvert.DeserializeObject<IWampMessage>(msg) as EventMessage;

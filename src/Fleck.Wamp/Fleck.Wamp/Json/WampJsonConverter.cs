@@ -114,10 +114,12 @@ namespace Fleck.Wamp.Json
 
                 if (property.PropertyType == typeof (object[]))
                 {
-                    foreach (var v in value.GetValue(target) as object[])
-                    {
-                        serializer.Serialize(writer, v);
-                    }
+                    var objects = value.GetValue(target) as object[];
+                    if (objects != null)
+                        foreach (var v in objects)
+                        {
+                            serializer.Serialize(writer, v);
+                        }
                 }
                 else if (property.PropertyType == typeof(IEnumerable<Guid>) || Nullable.GetUnderlyingType(property.PropertyType) != null)
                 {
