@@ -13,6 +13,7 @@ namespace Fleck.Wamp.Tests
         private Mock<IWampConnection> _connMock;
         private Mock<IWebSocketConnectionInfo> _connInfoMock;
         private Guid _connGuid;
+        private const int ProtocolVersion = 1;
         private const string ServerIdentity = "Fleck.Wamp/0.9.6";
 
         [TestFixtureSetUp]
@@ -39,13 +40,13 @@ namespace Fleck.Wamp.Tests
         [Test]
         public void TestProtocolVersionIsCorrect()
         {
-            Assert.AreEqual(1, _wampServer.ProtocolVersion);
+            Assert.AreEqual(ProtocolVersion, _wampServer.ProtocolVersion);
         }
 
         [Test]
         public void TestServerIdentityIsCorrect()
         {
-            Assert.AreEqual("Fleck.Wamp/0.9.6", _wampServer.ServerIdentity);
+            Assert.AreEqual(ServerIdentity, _wampServer.ServerIdentity);
         }
 
         [Test]
@@ -66,6 +67,27 @@ namespace Fleck.Wamp.Tests
             Assert.AreEqual(1, welcomeMsg.ProtocolVersion);
             Assert.AreEqual(_connGuid, welcomeMsg.SessionId);
             Assert.AreEqual(ServerIdentity, welcomeMsg.ServerIdentity);
+        }
+
+        [Test]
+        public void TestAddRemovePrefix()
+        {
+            const string prefix = "calc";
+            var uri = new Uri("http://example.com/simple/calc#");
+
+            var msg = new PrefixMessage {Prefix = prefix, Uri = uri};
+
+            _wampServer.Start(config => { });
+
+            _connMock.Object.OnPrefix(msg);
+
+            Assert.IsTrue(_wampServer.Prefixes.ContainsKey(_connGuid));
+            Assert.IsTrue(_wampServer.Prefixes[_connGuid].ContainsKey(prefix));
+            Assert.AreEqual(uri, _wampServer.Prefixes[_connGuid][prefix]);
+
+            _connMock.Object.OnClose();
+
+            Assert.IsFalse(_wampServer.Prefixes.ContainsKey(_connGuid));
         }
     }
 }

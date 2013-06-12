@@ -11,9 +11,18 @@ namespace Fleck.Wamp
     public class WampServer : IWampServer
     {
         private const int DefaultListeningPort = 8181;
+        private const int ProtocolVersionConst = 1;
+
         private readonly IWampCommsHandler _commsHandler;
 
-        public int ProtocolVersion { get; private set; }
+        public IDictionary<Guid, IDictionary<string, Uri>> Prefixes { get; private set; }
+        public IDictionary<Uri, ISet<Guid>> Subscriptions { get; private set; }
+
+        public int ProtocolVersion
+        {
+            get { return ProtocolVersionConst; }
+        }
+
         public string ServerIdentity { get; private set; }
 
         public WampServer(string location)
@@ -35,7 +44,8 @@ namespace Fleck.Wamp
                 assemblyName.Version.Minor,
                 assemblyName.Version.Build);
 
-            ProtocolVersion = 1;
+            Prefixes = new Dictionary<Guid, IDictionary<string, Uri>>();
+            Subscriptions = new Dictionary<Uri, ISet<Guid>>();
 
             _commsHandler = commsHandler;            
         }
@@ -60,28 +70,47 @@ namespace Fleck.Wamp
                     socket.OnPublish = msg => HandleOnPublish(socket, msg);
                     socket.OnSubscribe = msg => HandleOnSubscribe(socket, msg);
                     socket.OnUnsubscribe = msg => HandleOnUnsubscribe(socket, msg);
-                    socket.OnWelcome = msg => HandleOnWelcome(socket, msg);
                 });
         }
 
-        private void HandleOnWelcome(IWampConnection socket, WelcomeMessage msg)
+        private void HandleOnUnsubscribe(IWampConnection connection, UnsubscribeMessage msg)
+        {
+            var connId = connection.WebSocketConnectionInfo.Id;
+
+            if (!Subscriptions.ContainsKey(msg.TopicUri))
+                return;
+
+            var subscriptions = Subscriptions[msg.TopicUri];
+
+            subscriptions.Remove(connId);
+        }
+
+        private void HandleOnSubscribe(IWampConnection connection, SubscribeMessage msg)
+        {
+            var connId = connection.WebSocketConnectionInfo.Id;
+
+            if (!Subscriptions.ContainsKey(msg.TopicUri))
+                Subscriptions[msg.TopicUri] = new HashSet<Guid>();
+
+            var subscriptions = Subscriptions[msg.TopicUri];
+
+            subscriptions.Add(connId);
+        }
+
+        private void HandleOnPublish(IWampConnection connection, PublishMessage msg)
         {
         }
 
-        private void HandleOnUnsubscribe(IWampConnection socket, UnsubscribeMessage msg)
+        private void HandleOnPrefix(IWampConnection connection, PrefixMessage msg)
         {
-        }
+            var connId = connection.WebSocketConnectionInfo.Id;
+            
+            if (!Prefixes.ContainsKey(connId))
+                Prefixes.Add(connId, new Dictionary<string, Uri>());
 
-        private void HandleOnSubscribe(IWampConnection socket, SubscribeMessage subscribeMessage)
-        {
-        }
+            var prefixes = Prefixes[connId];
 
-        private void HandleOnPublish(IWampConnection connection, PublishMessage publishMessage)
-        {
-        }
-
-        private void HandleOnPrefix(IWampConnection connection, PrefixMessage prefixMessage)
-        {
+            prefixes[msg.Prefix] = msg.Uri;
         }
 
         private void HandleOnOpen(IWampConnection connection)
@@ -97,6 +126,17 @@ namespace Fleck.Wamp
 
         private void HandleOnClose(IWampConnection connection)
         {
+            var connId = connection.WebSocketConnectionInfo.Id;
+
+            Prefixes.Remove(connId);
+
+            foreach (var topics in Subscriptions)
+            {
+                topics.Value.Remove(connId);
+
+                if (!topics.Value.Any())
+                    Subscriptions.Remove(topics);
+            }
         }
     
     }

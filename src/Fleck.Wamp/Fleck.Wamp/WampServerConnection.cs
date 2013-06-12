@@ -30,14 +30,17 @@ namespace Fleck.Wamp
 
         public void SendCallResult(CallResultMessage message)
         {
+            _wampConnection.SendCallResult(message);
         }
 
         public void SendCallError(CallErrorMessage message)
         {
+            _wampConnection.SendCallError(message);
         }
 
         public void SendEvent(EventMessage message)
         {
+            _wampConnection.SendEvent(message);
         }
     }
 }
