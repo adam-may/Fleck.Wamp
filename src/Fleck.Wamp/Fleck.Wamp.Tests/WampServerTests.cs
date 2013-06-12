@@ -89,5 +89,23 @@ namespace Fleck.Wamp.Tests
 
             Assert.IsFalse(_wampServer.Prefixes.ContainsKey(_connGuid));
         }
+
+        [TestCase("http://example.com/simple")]
+        [TestCase("event:myevent1")]
+        [Test]
+        public void TestAddRemoveSubscription(string uriString)
+        {
+            var uri = new Uri(uriString);
+            
+            var msg = new SubscribeMessage {TopicUri = uri};
+
+            _wampServer.AddSubcriptionChannel(uri);
+            _wampServer.Start(config => { });
+
+            _connMock.Object.OnSubscribe(msg);
+
+            Assert.IsTrue(_wampServer.Subscriptions.ContainsKey(uri));
+            Assert.IsTrue(_wampServer.Subscriptions[uri].Contains(_connGuid));
+        }
     }
 }

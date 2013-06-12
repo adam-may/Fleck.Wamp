@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -12,11 +13,14 @@ namespace Fleck.Wamp
     {
         private const int DefaultListeningPort = 8181;
         private const int ProtocolVersionConst = 1;
-
+        private readonly IDictionary<Uri, ISet<Guid>> _subscriptions;
         private readonly IWampCommsHandler _commsHandler;
 
         public IDictionary<Guid, IDictionary<string, Uri>> Prefixes { get; private set; }
-        public IDictionary<Uri, ISet<Guid>> Subscriptions { get; private set; }
+        public IReadOnlyDictionary<Uri, ISet<Guid>> Subscriptions
+        {
+            get { return new ReadOnlyDictionary<Uri, ISet<Guid>>(_subscriptions); }
+        }
 
         public int ProtocolVersion
         {
@@ -45,7 +49,7 @@ namespace Fleck.Wamp
                 assemblyName.Version.Build);
 
             Prefixes = new Dictionary<Guid, IDictionary<string, Uri>>();
-            Subscriptions = new Dictionary<Uri, ISet<Guid>>();
+            _subscriptions = new Dictionary<Uri, ISet<Guid>>();
 
             _commsHandler = commsHandler;            
         }
@@ -73,6 +77,11 @@ namespace Fleck.Wamp
                 });
         }
 
+        public void AddSubcriptionChannel(Uri uri)
+        {
+            _subscriptions.Add(uri, new HashSet<Guid>());
+        }
+
         private void HandleOnUnsubscribe(IWampConnection connection, UnsubscribeMessage msg)
         {
             var connId = connection.WebSocketConnectionInfo.Id;
@@ -90,7 +99,7 @@ namespace Fleck.Wamp
             var connId = connection.WebSocketConnectionInfo.Id;
 
             if (!Subscriptions.ContainsKey(msg.TopicUri))
-                Subscriptions[msg.TopicUri] = new HashSet<Guid>();
+                return;
 
             var subscriptions = Subscriptions[msg.TopicUri];
 
@@ -133,9 +142,6 @@ namespace Fleck.Wamp
             foreach (var topics in Subscriptions)
             {
                 topics.Value.Remove(connId);
-
-                if (!topics.Value.Any())
-                    Subscriptions.Remove(topics);
             }
         }
     
