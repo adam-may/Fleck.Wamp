@@ -12,19 +12,20 @@ namespace Fleck.Wamp
     public class WampServer : IWampServer
     {
         private const int DefaultListeningPort = 8181;
-        private const int ProtocolVersionConst = 1;
-        private readonly IDictionary<Uri, ISet<Guid>> _subscriptions;
+        private const int Version = 1;
+        private readonly IDictionary<Uri, ISet<IWampServerConnection>> _subscriptions;
         private readonly IWampCommsHandler _commsHandler;
+        private readonly IDictionary<Guid, IWampServerConnection> _connections;
 
-        public IDictionary<Guid, IDictionary<string, Uri>> Prefixes { get; private set; }
-        public IReadOnlyDictionary<Uri, ISet<Guid>> Subscriptions
+        public IDictionary<IWampServerConnection, IDictionary<string, Uri>> Prefixes { get; private set; }
+        public IReadOnlyDictionary<Uri, ISet<IWampServerConnection>> Subscriptions
         {
-            get { return new ReadOnlyDictionary<Uri, ISet<Guid>>(_subscriptions); }
+            get { return new ReadOnlyDictionary<Uri, ISet<IWampServerConnection>>(_subscriptions); }
         }
 
         public int ProtocolVersion
         {
-            get { return ProtocolVersionConst; }
+            get { return Version; }
         }
 
         public string ServerIdentity { get; private set; }
@@ -48,8 +49,9 @@ namespace Fleck.Wamp
                 assemblyName.Version.Minor,
                 assemblyName.Version.Build);
 
-            Prefixes = new Dictionary<Guid, IDictionary<string, Uri>>();
-            _subscriptions = new Dictionary<Uri, ISet<Guid>>();
+            Prefixes = new Dictionary<IWampServerConnection, IDictionary<string, Uri>>();
+            _subscriptions = new Dictionary<Uri, ISet<IWampServerConnection>>();
+            _connections = new Dictionary<Guid, IWampServerConnection>();
 
             _commsHandler = commsHandler;            
         }
@@ -79,51 +81,77 @@ namespace Fleck.Wamp
 
         public void AddSubcriptionChannel(Uri uri)
         {
-            _subscriptions.Add(uri, new HashSet<Guid>());
+            _subscriptions.Add(uri, new HashSet<IWampServerConnection>());
+        }
+
+        public void RemoveSubscriptionChannel(Uri uri)
+        {
+            _subscriptions.Remove(uri);
+        }
+
+        private bool TryGetSubscriptions(Uri uri, out ISet<IWampServerConnection> subscriptions)
+        {
+            subscriptions = null;
+
+            if (!Subscriptions.ContainsKey(uri))
+                return false;
+
+            subscriptions = Subscriptions[uri];
+            return true;
         }
 
         private void HandleOnUnsubscribe(IWampConnection connection, UnsubscribeMessage msg)
         {
-            var connId = connection.WebSocketConnectionInfo.Id;
+            ISet<IWampServerConnection> subscriptions;
 
-            if (!Subscriptions.ContainsKey(msg.TopicUri))
+            if (!TryGetSubscriptions(msg.TopicUri, out subscriptions))
                 return;
 
-            var subscriptions = Subscriptions[msg.TopicUri];
-
-            subscriptions.Remove(connId);
+            subscriptions.Remove(connection);
         }
 
         private void HandleOnSubscribe(IWampConnection connection, SubscribeMessage msg)
         {
-            var connId = connection.WebSocketConnectionInfo.Id;
+            ISet<IWampServerConnection> subscriptions;
 
-            if (!Subscriptions.ContainsKey(msg.TopicUri))
+            if (!TryGetSubscriptions(msg.TopicUri, out subscriptions))
                 return;
 
-            var subscriptions = Subscriptions[msg.TopicUri];
-
-            subscriptions.Add(connId);
+            subscriptions.Add(connection);
         }
 
         private void HandleOnPublish(IWampConnection connection, PublishMessage msg)
         {
+            ISet<IWampServerConnection> subscriptions;
+
+            if (!TryGetSubscriptions(msg.TopicUri, out subscriptions))
+                return;
+            
+            foreach (var subscription in subscriptions)
+            {
+                if ((msg.Eligible.Contains(subscription.WebSocketConnectionInfo.Id) ||
+                     !msg.Exclude.Contains(subscription.WebSocketConnectionInfo.Id)) &&
+                    (msg.ExcludeMe.HasValue && msg.ExcludeMe.Value != true))
+                    subscription.SendPublish(msg);
+            }
         }
 
         private void HandleOnPrefix(IWampConnection connection, PrefixMessage msg)
         {
-            var connId = connection.WebSocketConnectionInfo.Id;
-            
-            if (!Prefixes.ContainsKey(connId))
-                Prefixes.Add(connId, new Dictionary<string, Uri>());
+            if (!Prefixes.ContainsKey(connection))
+                Prefixes.Add(connection, new Dictionary<string, Uri>());
 
-            var prefixes = Prefixes[connId];
+            var prefixes = Prefixes[connection];
 
             prefixes[msg.Prefix] = msg.Uri;
         }
 
         private void HandleOnOpen(IWampConnection connection)
         {
+            // Add connection to lookup
+            var connId = connection.WebSocketConnectionInfo.Id;
+            _connections.Add(connId, connection);
+
             var message = new WelcomeMessage()
             {
                 SessionId = connection.WebSocketConnectionInfo.Id,
@@ -135,13 +163,16 @@ namespace Fleck.Wamp
 
         private void HandleOnClose(IWampConnection connection)
         {
-            var connId = connection.WebSocketConnectionInfo.Id;
+            // Remove connection from lookup
+            _connections.Remove(connection.WebSocketConnectionInfo.Id);
 
-            Prefixes.Remove(connId);
+            // Remove prefixes
+            Prefixes.Remove(connection);
 
+            // Remove subscriptions
             foreach (var topics in Subscriptions)
             {
-                topics.Value.Remove(connId);
+                topics.Value.Remove(connection);
             }
         }
     

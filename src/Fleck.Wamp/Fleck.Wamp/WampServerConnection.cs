@@ -42,5 +42,39 @@ namespace Fleck.Wamp
         {
             _wampConnection.SendEvent(message);
         }
+
+        public void SendPublish(PublishMessage message)
+        {
+            _wampConnection.SendPublish(message);
+        }
+
+        #region Equality implementation
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return obj.GetType() == GetType() && Equals((WampServerConnection)obj);
+        }
+
+        protected bool Equals(WampServerConnection other)
+        {
+            return Equals(_wampConnection, other._wampConnection);
+        }
+
+        public override int GetHashCode()
+        {
+            return (_wampConnection != null ? _wampConnection.GetHashCode() : 0);
+        }
+
+        public static bool operator ==(WampServerConnection left, WampServerConnection right)
+        {
+            return Equals(left, right);
+        }
+
+        public static bool operator !=(WampServerConnection left, WampServerConnection right)
+        {
+            return !Equals(left, right);
+        }
+        #endregion
     }
 }

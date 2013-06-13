@@ -81,6 +81,12 @@ namespace Fleck.Wamp
             OnEvent(message);
         }
 
+        public void SendPublish(PublishMessage message)
+        {
+            SendMessage(message);
+            OnPublish(message);
+        }
+
         private void SendMessage(IWampMessage message)
         {
             var msg = JsonConvert.SerializeObject(message);

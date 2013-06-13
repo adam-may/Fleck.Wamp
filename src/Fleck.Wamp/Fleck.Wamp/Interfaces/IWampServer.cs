@@ -7,8 +7,8 @@ namespace Fleck.Wamp.Interfaces
     {
         int ProtocolVersion { get; }
         string ServerIdentity { get; }
-        IDictionary<Guid, IDictionary<string, Uri>> Prefixes { get; }
-        IReadOnlyDictionary<Uri, ISet<Guid>> Subscriptions { get; }
+        IDictionary<IWampServerConnection, IDictionary<string, Uri>> Prefixes { get; }
+        IReadOnlyDictionary<Uri, ISet<IWampServerConnection>> Subscriptions { get; }
 
         void Start(Action<IWampServerConnection> config);
         void AddSubcriptionChannel(Uri uri);

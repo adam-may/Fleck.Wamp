@@ -81,13 +81,13 @@ namespace Fleck.Wamp.Tests
 
             _connMock.Object.OnPrefix(msg);
 
-            Assert.IsTrue(_wampServer.Prefixes.ContainsKey(_connGuid));
-            Assert.IsTrue(_wampServer.Prefixes[_connGuid].ContainsKey(prefix));
-            Assert.AreEqual(uri, _wampServer.Prefixes[_connGuid][prefix]);
+            Assert.IsTrue(_wampServer.Prefixes.ContainsKey(_connMock.Object));
+            Assert.IsTrue(_wampServer.Prefixes[_connMock.Object].ContainsKey(prefix));
+            Assert.AreEqual(uri, _wampServer.Prefixes[_connMock.Object][prefix]);
 
             _connMock.Object.OnClose();
 
-            Assert.IsFalse(_wampServer.Prefixes.ContainsKey(_connGuid));
+            Assert.IsFalse(_wampServer.Prefixes.ContainsKey(_connMock.Object));
         }
 
         [TestCase("http://example.com/simple")]
@@ -105,7 +105,7 @@ namespace Fleck.Wamp.Tests
             _connMock.Object.OnSubscribe(msg);
 
             Assert.IsTrue(_wampServer.Subscriptions.ContainsKey(uri));
-            Assert.IsTrue(_wampServer.Subscriptions[uri].Contains(_connGuid));
+            Assert.IsTrue(_wampServer.Subscriptions[uri].Contains(_connMock.Object));
         }
     }
 }

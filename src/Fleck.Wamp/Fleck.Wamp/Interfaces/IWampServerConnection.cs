@@ -12,5 +12,6 @@ namespace Fleck.Wamp.Interfaces
         void SendCallResult(CallResultMessage message);
         void SendCallError(CallErrorMessage message);
         void SendEvent(EventMessage message);
+        void SendPublish(PublishMessage message);
     }
 }
