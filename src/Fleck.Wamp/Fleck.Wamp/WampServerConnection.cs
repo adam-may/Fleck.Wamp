@@ -13,6 +13,7 @@ namespace Fleck.Wamp
             OnCallResult = message => { };
             OnCallError = message => { };
             OnEvent = message => { };
+            OnPublish = message => { };
             initialize(this);
 
             _wampConnection = wampConnection;
@@ -27,6 +28,7 @@ namespace Fleck.Wamp
         public Action<CallResultMessage> OnCallResult { get; set; }
         public Action<CallErrorMessage> OnCallError { get; set; }
         public Action<EventMessage> OnEvent { get; set; }
+        public Action<PublishMessage> OnPublish { get; set; }
 
         public void SendCallResult(CallResultMessage message)
         {

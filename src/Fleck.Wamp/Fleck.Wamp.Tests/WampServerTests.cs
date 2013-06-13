@@ -126,9 +126,41 @@ namespace Fleck.Wamp.Tests
             Assert.IsTrue(_wampServer.Subscriptions[uri].Contains(connMock.Object));
         }
 
+        [TestCase("http://example.com/simple")]
         [Test]
-        public void TestPublishToAll()
+        public void TestPublishToAll(string uriString)
         {
+            var firstCalled = false;
+            var secondCalled = false;
+            var thirdCalled = false;
+
+            var uri = new Uri(uriString);
+
+            _wampServer.Start(config =>
+            {
+                config.OnPublish = msg => firstCalled = true;
+            });
+            _wampServer.Start(config =>
+            {
+                config.OnPublish = msg => secondCalled = true;
+            });
+            _wampServer.Start(config =>
+            {
+                config.OnPublish = msg => thirdCalled = true;
+            });
+
+            var connMock1 = _connections.First();
+
+            var m = new PublishMessage
+                {
+                    TopicUri = uri
+                };
+
+            connMock1.Object.SendPublish(m);
+
+            Assert.IsTrue(firstCalled);
+            Assert.IsTrue(secondCalled);
+            Assert.IsTrue(thirdCalled);
         }
     }
 }

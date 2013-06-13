@@ -9,6 +9,7 @@ namespace Fleck.Wamp.Interfaces
         Action<CallResultMessage> OnCallResult { get; set; }
         Action<CallErrorMessage> OnCallError { get; set; }
         Action<EventMessage> OnEvent { get; set; }
+        Action<PublishMessage> OnPublish { get; set; }
         void SendCallResult(CallResultMessage message);
         void SendCallError(CallErrorMessage message);
         void SendEvent(EventMessage message);
