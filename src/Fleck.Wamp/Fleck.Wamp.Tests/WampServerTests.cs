@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Fleck.Wamp.Interfaces;
 using Moq;
 using NUnit.Framework;
@@ -10,29 +12,39 @@ namespace Fleck.Wamp.Tests
     {
         private IWampServer _wampServer;
         private Mock<IWampCommsHandler> _commsMock;
-        private Mock<IWampConnection> _connMock;
-        private Mock<IWebSocketConnectionInfo> _connInfoMock;
-        private Guid _connGuid;
+        private List<Mock<IWampConnection>> _connections;
         private const int ProtocolVersion = 1;
         private const string ServerIdentity = "Fleck.Wamp/0.9.6";
 
-        [TestFixtureSetUp]
+        private Mock<IWampConnection> CreateMockConnection()
+        {
+            var connGuid = Guid.NewGuid();
+
+            var connInfoMock = new Mock<IWebSocketConnectionInfo>();
+            var connMock = new Mock<IWampConnection>();
+
+            connInfoMock.SetupGet(x => x.SubProtocol).Returns("wamp");
+            connInfoMock.SetupGet(x => x.Id).Returns(connGuid);
+
+            connMock.SetupGet(x => x.WebSocketConnectionInfo).Returns(connInfoMock.Object);
+            connMock.SetupAllProperties();
+
+            return connMock;
+        }
+
+        [SetUp]
         public void Setup()
         {
-            _connGuid = Guid.NewGuid();
-
-            _connInfoMock = new Mock<IWebSocketConnectionInfo>();
-            _connMock = new Mock<IWampConnection>();
+            _connections = new List<Mock<IWampConnection>>();
             _commsMock = new Mock<IWampCommsHandler>();
 
-            _connInfoMock.SetupGet(x => x.SubProtocol).Returns("wamp");
-            _connInfoMock.SetupGet(x => x.Id).Returns(_connGuid);
-
-            _connMock.SetupGet(x => x.WebSocketConnectionInfo).Returns(_connInfoMock.Object);
-            _connMock.SetupAllProperties();
-
             _commsMock.Setup(x => x.Start(It.IsAny<Action<IWampConnection>>()))
-                      .Callback<Action<IWampConnection>>(x => x(_connMock.Object));
+                      .Callback<Action<IWampConnection>>(x =>
+                      {
+                          var c = CreateMockConnection();
+                          _connections.Add(c);
+                          x(c.Object);
+                      });
 
             _wampServer = new WampServer(_commsMock.Object);
         }
@@ -56,16 +68,18 @@ namespace Fleck.Wamp.Tests
 
             WelcomeMessage welcomeMsg = null;
 
-            _connMock.Setup(x => x.SendWelcome(It.IsAny<WelcomeMessage>()))
+            var connMock = _connections.First();
+
+            connMock.Setup(x => x.SendWelcome(It.IsAny<WelcomeMessage>()))
                      .Callback<WelcomeMessage>(x => welcomeMsg = x);
 
-            _connMock.Object.OnOpen();
+            connMock.Object.OnOpen();
 
             Assert.IsNotNull(welcomeMsg);
             Assert.IsInstanceOf<WelcomeMessage>(welcomeMsg);
             Assert.AreEqual(MessageType.Welcome, welcomeMsg.MessageType);
             Assert.AreEqual(1, welcomeMsg.ProtocolVersion);
-            Assert.AreEqual(_connGuid, welcomeMsg.SessionId);
+            Assert.AreEqual(connMock.Object.WebSocketConnectionInfo.Id, welcomeMsg.SessionId);
             Assert.AreEqual(ServerIdentity, welcomeMsg.ServerIdentity);
         }
 
@@ -79,15 +93,17 @@ namespace Fleck.Wamp.Tests
 
             _wampServer.Start(config => { });
 
-            _connMock.Object.OnPrefix(msg);
+            var connMock = _connections.First();
 
-            Assert.IsTrue(_wampServer.Prefixes.ContainsKey(_connMock.Object));
-            Assert.IsTrue(_wampServer.Prefixes[_connMock.Object].ContainsKey(prefix));
-            Assert.AreEqual(uri, _wampServer.Prefixes[_connMock.Object][prefix]);
+            connMock.Object.OnPrefix(msg);
 
-            _connMock.Object.OnClose();
+            Assert.IsTrue(_wampServer.Prefixes.ContainsKey(connMock.Object));
+            Assert.IsTrue(_wampServer.Prefixes[connMock.Object].ContainsKey(prefix));
+            Assert.AreEqual(uri, _wampServer.Prefixes[connMock.Object][prefix]);
 
-            Assert.IsFalse(_wampServer.Prefixes.ContainsKey(_connMock.Object));
+            connMock.Object.OnClose();
+
+            Assert.IsFalse(_wampServer.Prefixes.ContainsKey(connMock.Object));
         }
 
         [TestCase("http://example.com/simple")]
@@ -102,10 +118,17 @@ namespace Fleck.Wamp.Tests
             _wampServer.AddSubcriptionChannel(uri);
             _wampServer.Start(config => { });
 
-            _connMock.Object.OnSubscribe(msg);
+            var connMock = _connections.First();
+
+            connMock.Object.OnSubscribe(msg);
 
             Assert.IsTrue(_wampServer.Subscriptions.ContainsKey(uri));
-            Assert.IsTrue(_wampServer.Subscriptions[uri].Contains(_connMock.Object));
+            Assert.IsTrue(_wampServer.Subscriptions[uri].Contains(connMock.Object));
+        }
+
+        [Test]
+        public void TestPublishToAll()
+        {
         }
     }
 }

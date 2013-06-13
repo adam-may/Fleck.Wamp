@@ -121,7 +121,9 @@ namespace Fleck.Wamp.Json
                             serializer.Serialize(writer, v);
                         }
                 }
-                else if (property.PropertyType == typeof(IEnumerable<Guid>) || Nullable.GetUnderlyingType(property.PropertyType) != null)
+                else if (property.PropertyType == typeof(IEnumerable<Guid>) ||
+                    property.PropertyType == typeof(ISet<Guid>) ||
+                    Nullable.GetUnderlyingType(property.PropertyType) != null)
                 {
                     var val = value.GetValue(target);
                     if (val != null)

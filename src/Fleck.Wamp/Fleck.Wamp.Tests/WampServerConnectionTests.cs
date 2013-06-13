@@ -31,8 +31,6 @@ namespace Fleck.Wamp.Tests
             Assert.IsTrue(_connMock.Equals(_connMock));
             Assert.IsFalse(_connMock == c2);
             Assert.IsTrue(_connMock != c2);
-            Assert.IsTrue(_connMock != _connMock);
-            Assert.IsTrue(_connMock != _connMock);
 #pragma warning restore 252,253
             // ReSharper restore EqualExpressionComparison
             // ReSharper restore PossibleUnintendedReferenceComparison
