@@ -89,51 +89,47 @@ namespace Fleck.Wamp
             _subscriptions.Remove(uri);
         }
 
-        private bool TryGetSubscriptions(Uri uri, out ISet<IWampServerConnection> subscriptions)
-        {
-            subscriptions = null;
-
-            if (!Subscriptions.ContainsKey(uri))
-                return false;
-
-            subscriptions = Subscriptions[uri];
-            return true;
-        }
-
         private void HandleOnUnsubscribe(IWampConnection connection, UnsubscribeMessage msg)
         {
-            ISet<IWampServerConnection> subscriptions;
-
-            if (!TryGetSubscriptions(msg.TopicUri, out subscriptions))
+            if (!_subscriptions.ContainsKey(msg.TopicUri))
                 return;
 
-            subscriptions.Remove(connection);
+            _subscriptions[msg.TopicUri].Remove(connection);
         }
 
         private void HandleOnSubscribe(IWampConnection connection, SubscribeMessage msg)
         {
-            ISet<IWampServerConnection> subscriptions;
-
-            if (!TryGetSubscriptions(msg.TopicUri, out subscriptions))
+            if (!_subscriptions.ContainsKey(msg.TopicUri))
                 return;
 
-            subscriptions.Add(connection);
+            _subscriptions[msg.TopicUri].Add(connection);
         }
 
         private void HandleOnPublish(IWampConnection connection, PublishMessage msg)
         {
-            ISet<IWampServerConnection> subscriptions;
-
-            if (!TryGetSubscriptions(msg.TopicUri, out subscriptions))
+            if (!_subscriptions.ContainsKey(msg.TopicUri))
                 return;
-            
+
+            var subscriptions = msg.Eligible == null
+                    ? _subscriptions[msg.TopicUri]
+                    : _subscriptions[msg.TopicUri].Where(x =>
+                        {
+                            var c = connection;
+                            return msg.Eligible.Contains(c.WebSocketConnectionInfo.Id);
+                        })
+                .Where(x =>
+                    {
+                        var c = connection;
+                        if (msg.ExcludeMe.HasValue && 
+                            msg.ExcludeMe.Value && 
+                            x.WebSocketConnectionInfo.Id == c.WebSocketConnectionInfo.Id)
+                            return false;
+
+                        return !msg.Exclude.Contains(x.WebSocketConnectionInfo.Id);
+                    });
+
             foreach (var subscription in subscriptions)
-            {
-                if ((msg.Eligible.Contains(subscription.WebSocketConnectionInfo.Id) ||
-                     !msg.Exclude.Contains(subscription.WebSocketConnectionInfo.Id)) &&
-                    (msg.ExcludeMe.HasValue && msg.ExcludeMe.Value != true))
-                    subscription.SendPublish(msg);
-            }
+                subscription.SendPublish(msg);
         }
 
         private void HandleOnPrefix(IWampConnection connection, PrefixMessage msg)

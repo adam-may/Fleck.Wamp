@@ -60,9 +60,9 @@ namespace Fleck.Wamp
         [JsonProperty(Order = 4)]
         public bool? ExcludeMe { get; set; }
         [JsonProperty(Order = 5)]
-        public IEnumerable<Guid> Exclude { get; set; }
+        public ISet<Guid> Exclude { get; set; }
         [JsonProperty(Order = 6)]
-        public IEnumerable<Guid> Eligible { get; set; }
+        public ISet<Guid> Eligible { get; set; }
     }
 
     [JsonConverter(typeof(WampJsonConverter))]
