@@ -5,6 +5,19 @@ WebSocket Application Messaging Protocol (WAMP) implementation based upon Jason 
 
 Details of the WAMP specification can be found at http://www.wamp.ws.
 
+## Usage ##
+
+The Fleck.Wamp codebase is designed so that there are two points for reuse:
+- WampCommsHandler, and
+- WampServer
+
+WampCommsHandler is a lightweight wrapper over Fleck that really only deals with deserializing the WebSockets messages into a WAMP message structure. All details of the protocol sequencing (such as the implementation of the welcome message sending and prefixes/subscriptions) is left up to the calling class.
+
+WampServer is a more complete implementation of the WAMP specification and additionally deals with the following protocol details:
+- Sending of Welcome message on opening of the socket
+- Maintenance of the Prefix and Subscriptions sets
+- Supports Authentication via WAMP-CRA (Challenge-Response Authentication) - Not yet completed
+
 ## Supported WebSocket versions ##
 While Fleck supports Hixie-Draft-76/Hybi-00, Hybi-07, Hybi-10 and Hybi-13, for WebSocket purposes, only the last three are supported for WAMP due to the draft specification missing the Sec-WebSocket-Protocol header, which must be set to "wamp" for WAMP to be used as the SubProtocol.
 
