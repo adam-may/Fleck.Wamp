@@ -128,7 +128,7 @@ namespace Fleck.Wamp.Tests
 
         [TestCase("http://example.com/simple")]
         [Test]
-        public void TestPublishToAll(string uriString)
+        public void TestPublishWithNoSubscriptions(string uriString)
         {
             var firstCalled = false;
             var secondCalled = false;
@@ -156,11 +156,59 @@ namespace Fleck.Wamp.Tests
                     TopicUri = uri
                 };
 
-            connMock1.Object.SendPublish(m);
+            connMock1.Object.OnPublish(m);
+
+            Assert.IsFalse(firstCalled);
+            Assert.IsFalse(secondCalled);
+            Assert.IsFalse(thirdCalled);
+        }
+
+        [TestCase("http://example.com/simple")]
+        [Test]
+        public void TestPublishToAll(string uriString)
+        {
+            var firstCalled = false;
+            var secondCalled = false;
+            var thirdCalled = false;
+
+            var uri = new Uri(uriString);
+
+            _wampServer.AddSubcriptionChannel(uri);
+
+            _wampServer.Start(config =>
+            {
+                config.OnPublish = msg => firstCalled = true;
+            });
+            _wampServer.Start(config =>
+            {
+                config.OnPublish = msg => secondCalled = true;
+            });
+            _wampServer.Start(config =>
+            {
+                config.OnPublish = msg => thirdCalled = true;
+            });
+
+            var connMock1 = _connections.First();
+            var connMock2 = _connections.Skip(1).First();
+            var connMock3 = _connections.Skip(2).First();
+
+            var subscribeMsg = new SubscribeMessage { TopicUri = uri };
+
+            connMock1.Object.OnSubscribe(subscribeMsg);
+            connMock2.Object.OnSubscribe(subscribeMsg);
+            connMock3.Object.OnSubscribe(subscribeMsg);
+
+            var m = new PublishMessage
+            {
+                TopicUri = uri
+            };
+
+            connMock1.Object.OnPublish(m);
 
             Assert.IsTrue(firstCalled);
             Assert.IsTrue(secondCalled);
             Assert.IsTrue(thirdCalled);
         }
+    
     }
 }
