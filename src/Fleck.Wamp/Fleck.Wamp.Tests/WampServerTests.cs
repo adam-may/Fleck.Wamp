@@ -175,18 +175,9 @@ namespace Fleck.Wamp.Tests
 
             _wampServer.AddSubcriptionChannel(uri);
 
-            _wampServer.Start(config =>
-            {
-                config.OnPublish = msg => firstCalled = true;
-            });
-            _wampServer.Start(config =>
-            {
-                config.OnPublish = msg => secondCalled = true;
-            });
-            _wampServer.Start(config =>
-            {
-                config.OnPublish = msg => thirdCalled = true;
-            });
+            _wampServer.Start(config => { });
+            _wampServer.Start(config => { });
+            _wampServer.Start(config => { });
 
             var connMock1 = _connections.First();
             var connMock2 = _connections.Skip(1).First();
@@ -197,6 +188,10 @@ namespace Fleck.Wamp.Tests
             connMock1.Object.OnSubscribe(subscribeMsg);
             connMock2.Object.OnSubscribe(subscribeMsg);
             connMock3.Object.OnSubscribe(subscribeMsg);
+
+            connMock1.Setup(x => x.SendPublish(It.IsAny<PublishMessage>())).Callback(() => firstCalled = true);
+            connMock2.Setup(x => x.SendPublish(It.IsAny<PublishMessage>())).Callback(() => secondCalled = true);
+            connMock3.Setup(x => x.SendPublish(It.IsAny<PublishMessage>())).Callback(() => thirdCalled = true);
 
             var m = new PublishMessage
             {
@@ -209,6 +204,133 @@ namespace Fleck.Wamp.Tests
             Assert.IsTrue(secondCalled);
             Assert.IsTrue(thirdCalled);
         }
-    
+
+        [TestCase("http://example.com/simple")]
+        [Test]
+        public void TestPublishToSome(string uriString)
+        {
+            var firstCalled = false;
+            var secondCalled = false;
+            var thirdCalled = false;
+
+            var uri = new Uri(uriString);
+
+            _wampServer.AddSubcriptionChannel(uri);
+
+            _wampServer.Start(config => { });
+            _wampServer.Start(config => { });
+            _wampServer.Start(config => { });
+
+            var connMock1 = _connections.First();
+            var connMock2 = _connections.Skip(1).First();
+            var connMock3 = _connections.Skip(2).First();
+
+            var subscribeMsg = new SubscribeMessage { TopicUri = uri };
+
+            // Missing second connection from the list of subscribers
+            connMock1.Object.OnSubscribe(subscribeMsg);
+            connMock3.Object.OnSubscribe(subscribeMsg);
+
+            connMock1.Setup(x => x.SendPublish(It.IsAny<PublishMessage>())).Callback(() => firstCalled = true);
+            connMock2.Setup(x => x.SendPublish(It.IsAny<PublishMessage>())).Callback(() => secondCalled = true);
+            connMock3.Setup(x => x.SendPublish(It.IsAny<PublishMessage>())).Callback(() => thirdCalled = true);
+
+            var m = new PublishMessage
+            {
+                TopicUri = uri
+            };
+
+            connMock1.Object.OnPublish(m);
+
+            Assert.IsTrue(firstCalled);
+            Assert.IsFalse(secondCalled);
+            Assert.IsTrue(thirdCalled);
+        }
+
+        [TestCase("http://example.com/simple")]
+        [Test]
+        public void TestPublishExcludingSender(string uriString)
+        {
+            var firstCalled = false;
+            var secondCalled = false;
+            var thirdCalled = false;
+
+            var uri = new Uri(uriString);
+
+            _wampServer.AddSubcriptionChannel(uri);
+
+            _wampServer.Start(config => { });
+            _wampServer.Start(config => { });
+            _wampServer.Start(config => { });
+
+            var connMock1 = _connections.First();
+            var connMock2 = _connections.Skip(1).First();
+            var connMock3 = _connections.Skip(2).First();
+
+            var subscribeMsg = new SubscribeMessage { TopicUri = uri };
+
+            connMock1.Object.OnSubscribe(subscribeMsg);
+            connMock2.Object.OnSubscribe(subscribeMsg);
+            connMock3.Object.OnSubscribe(subscribeMsg);
+
+            connMock1.Setup(x => x.SendPublish(It.IsAny<PublishMessage>())).Callback(() => firstCalled = true);
+            connMock2.Setup(x => x.SendPublish(It.IsAny<PublishMessage>())).Callback(() => secondCalled = true);
+            connMock3.Setup(x => x.SendPublish(It.IsAny<PublishMessage>())).Callback(() => thirdCalled = true);
+
+            var m = new PublishMessage
+            {
+                TopicUri = uri,
+                ExcludeMe = true
+            };
+
+            connMock1.Object.OnPublish(m);
+
+            Assert.IsFalse(firstCalled);
+            Assert.IsTrue(secondCalled);
+            Assert.IsTrue(thirdCalled);
+        }
+
+        [TestCase("http://example.com/simple")]
+        [Test]
+        public void TestPublishEligibleList(string uriString)
+        {
+            var firstCalled = false;
+            var secondCalled = false;
+            var thirdCalled = false;
+
+            var uri = new Uri(uriString);
+
+            _wampServer.AddSubcriptionChannel(uri);
+
+            _wampServer.Start(config => { });
+            _wampServer.Start(config => { });
+            _wampServer.Start(config => { });
+
+            var connMock1 = _connections.First();
+            var connMock2 = _connections.Skip(1).First();
+            var connMock3 = _connections.Skip(2).First();
+
+            var subscribeMsg = new SubscribeMessage { TopicUri = uri };
+
+            connMock1.Object.OnSubscribe(subscribeMsg);
+            connMock2.Object.OnSubscribe(subscribeMsg);
+            connMock3.Object.OnSubscribe(subscribeMsg);
+
+            connMock1.Setup(x => x.SendPublish(It.IsAny<PublishMessage>())).Callback(() => firstCalled = true);
+            connMock2.Setup(x => x.SendPublish(It.IsAny<PublishMessage>())).Callback(() => secondCalled = true);
+            connMock3.Setup(x => x.SendPublish(It.IsAny<PublishMessage>())).Callback(() => thirdCalled = true);
+
+            var m = new PublishMessage
+            {
+                TopicUri = uri,
+                Eligible = new HashSet<Guid>() { connMock2.Object.WebSocketConnectionInfo.Id }
+            };
+
+            connMock1.Object.OnPublish(m);
+
+            Assert.IsFalse(firstCalled);
+            Assert.IsTrue(secondCalled);
+            Assert.IsFalse(thirdCalled);
+        }
     }
 }

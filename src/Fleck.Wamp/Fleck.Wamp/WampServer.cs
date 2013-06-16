@@ -110,23 +110,15 @@ namespace Fleck.Wamp
             if (!_subscriptions.ContainsKey(msg.TopicUri))
                 return;
 
-            var subscriptions = msg.Eligible == null
+            var subscriptions = new HashSet<IWampServerConnection>(msg.Eligible == null
                     ? _subscriptions[msg.TopicUri]
-                    : _subscriptions[msg.TopicUri].Where(x =>
-                        {
-                            var c = connection;
-                            return msg.Eligible.Contains(c.WebSocketConnectionInfo.Id);
-                        })
-                .Where(x =>
-                    {
-                        var c = connection;
-                        if (msg.ExcludeMe.HasValue && 
-                            msg.ExcludeMe.Value && 
-                            x.WebSocketConnectionInfo.Id == c.WebSocketConnectionInfo.Id)
-                            return false;
+                    : _subscriptions[msg.TopicUri].Where(x => msg.Eligible.Contains(x.WebSocketConnectionInfo.Id)));
 
-                        return !msg.Exclude.Contains(x.WebSocketConnectionInfo.Id);
-                    });
+            if (msg.ExcludeMe.HasValue)
+                subscriptions.RemoveWhere(x => x.WebSocketConnectionInfo.Id == connection.WebSocketConnectionInfo.Id);
+
+            if (msg.Exclude != null)
+                subscriptions.RemoveWhere(x => msg.Exclude.Contains(x.WebSocketConnectionInfo.Id));
 
             foreach (var subscription in subscriptions)
                 subscription.SendPublish(msg);
