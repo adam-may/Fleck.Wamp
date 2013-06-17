@@ -164,5 +164,13 @@ namespace Fleck.Wamp
             }
         }
     
+        public void SendEvent(EventMessage msg)
+        {
+            if (!_subscriptions.ContainsKey(msg.TopicUri))
+                return;
+
+            foreach (var subscription in _subscriptions[msg.TopicUri])
+                subscription.SendEvent(msg);
+        }
     }
 }

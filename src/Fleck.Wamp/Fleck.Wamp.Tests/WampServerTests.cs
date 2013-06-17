@@ -332,5 +332,51 @@ namespace Fleck.Wamp.Tests
             Assert.IsTrue(secondCalled);
             Assert.IsFalse(thirdCalled);
         }
+
+        [TestCase("http://example.com/simple")]
+        [Test]
+        public void TestEvent(string uriString)
+        {
+            var firstCalled = false;
+            var secondCalled = false;
+            var thirdCalled = false;
+
+            var uri = new Uri(uriString);
+
+            _wampServer.AddSubcriptionChannel(uri);
+
+            _wampServer.Start(config => { });
+            _wampServer.Start(config => { });
+            _wampServer.Start(config => { });
+
+            var connMock1 = _connections.First();
+            var connMock2 = _connections.Skip(1).First();
+            var connMock3 = _connections.Skip(2).First();
+
+            var subscribeMsg = new SubscribeMessage { TopicUri = uri };
+
+            connMock1.Object.OnSubscribe(subscribeMsg);
+            connMock2.Object.OnSubscribe(subscribeMsg);
+            connMock3.Object.OnSubscribe(subscribeMsg);
+
+            connMock1.Setup(x => x.SendEvent(It.IsAny<EventMessage>())).Callback(() => firstCalled = true);
+            connMock2.Setup(x => x.SendEvent(It.IsAny<EventMessage>())).Callback(() => secondCalled = true);
+            connMock3.Setup(x => x.SendEvent(It.IsAny<EventMessage>())).Callback(() => thirdCalled = true);
+
+            var ev = new object[] {1, "string", 1};
+
+            var m = new EventMessage
+            {
+                TopicUri = uri,
+                Event = ev
+            };
+
+            _wampServer.SendEvent(m);
+
+            Assert.IsTrue(firstCalled);
+            Assert.IsTrue(secondCalled);
+            Assert.IsTrue(thirdCalled);
+        }
+    
     }
 }

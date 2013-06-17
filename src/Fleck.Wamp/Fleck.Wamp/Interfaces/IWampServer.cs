@@ -12,5 +12,6 @@ namespace Fleck.Wamp.Interfaces
 
         void Start(Action<IWampServerConnection> config);
         void AddSubcriptionChannel(Uri uri);
+        void SendEvent(EventMessage msg);
     }
 }
