@@ -23,13 +23,13 @@ While Fleck supports Hixie-Draft-76/Hybi-00, Hybi-07, Hybi-10 and Hybi-13, for W
 
 Note that Fleck isn't fully compatible with the WebSockets proposed standard (RFC6455), in that it mirrors back the clients Sec-WebSocket-Protocol field, rather than selecting a suitable one from the options as indicated at the end of page 7 of the RFC (http://tools.ietf.org/html/rfc6455).
 
-   Option fields can also be included.  In this version of the protocol,
+>   _Option fields can also be included.  In this version of the protocol,
    the main option field is |Sec-WebSocket-Protocol|, which indicates
    the subprotocol that the server has selected.  WebSocket clients
    verify that the server included one of the values that was specified
    in the WebSocket client's handshake.  A server that speaks multiple
    subprotocols has to make sure it selects one based on the client's
-   handshake and specifies it in its handshake.
+   handshake and specifies it in its handshake._
 
 Fleck.Wamp in this case insists that the client only sends through the value "wamp" for the Sec-WebSocket-Protocol header value.
 
