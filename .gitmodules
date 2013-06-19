@@ -1,6 +1,6 @@
 [submodule "external/Fleck"]
 	path = external/Fleck
 	url = git://github.com/statianzo/Fleck.git
-[submodule ".\\external\\Newtonsoft.Json"]
+[submodule "external/Newtonsoft.Json"]
 	path = external/Newtonsoft.Json
 	url = git://github.com/JamesNK/Newtonsoft.Json.git
