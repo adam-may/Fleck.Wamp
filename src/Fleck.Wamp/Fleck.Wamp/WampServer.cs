@@ -22,6 +22,10 @@ namespace Fleck.Wamp
         {
             get { return new ReadOnlyDictionary<Uri, ISet<IWampServerConnection>>(_subscriptions); }
         }
+        public IReadOnlyDictionary<Guid, IWampServerConnection> Connections
+        {
+            get { return new ReadOnlyDictionary<Guid, IWampServerConnection>(_connections); }
+        }
 
         public int ProtocolVersion
         {
@@ -79,7 +83,7 @@ namespace Fleck.Wamp
                 });
         }
 
-        public void AddSubcriptionChannel(Uri uri)
+        public void AddSubscriptionChannel(Uri uri)
         {
             _subscriptions.Add(uri, new HashSet<IWampServerConnection>());
         }
@@ -164,13 +168,41 @@ namespace Fleck.Wamp
             }
         }
     
-        public void SendEvent(EventMessage msg)
+        public void SendEvent(EventMessage msg, ISet<Guid> includes = null, ISet<Guid> excludes = null)
         {
             if (!_subscriptions.ContainsKey(msg.TopicUri))
                 return;
 
-            foreach (var subscription in _subscriptions[msg.TopicUri])
+            var s = includes == null
+                ? _subscriptions[msg.TopicUri]
+                : _subscriptions[msg.TopicUri].Where(t => includes.Contains(t.WebSocketConnectionInfo.Id));
+
+            var s2 = excludes == null
+                ? s
+                : s.Where(t => !excludes.Contains(t.WebSocketConnectionInfo.Id));
+
+            foreach (var subscription in s2)
                 subscription.SendEvent(msg);
+        }
+
+        public void AddSubscription(Uri uri, IWampServerConnection connection)
+        {
+            if (!_subscriptions.ContainsKey(uri))
+                return;
+
+            _subscriptions[uri].Add(connection);
+        }
+
+        public void RemoveSubscription(Uri uri, IWampServerConnection connection)
+        {
+            if (!_subscriptions.ContainsKey(uri))
+                return;
+
+            _subscriptions[uri].Remove(connection);
+        }
+
+        public void Dispose()
+        {
         }
     }
 }
