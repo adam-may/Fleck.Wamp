@@ -115,7 +115,7 @@ namespace Fleck.Wamp.Tests
             
             var msg = new SubscribeMessage {TopicUri = uri};
 
-            _wampServer.AddSubcriptionChannel(uri);
+            _wampServer.AddSubscriptionChannel(uri);
             _wampServer.Start(config => { });
 
             var connMock = _connections.First();
@@ -173,7 +173,7 @@ namespace Fleck.Wamp.Tests
 
             var uri = new Uri(uriString);
 
-            _wampServer.AddSubcriptionChannel(uri);
+            _wampServer.AddSubscriptionChannel(uri);
 
             _wampServer.Start(config => { });
             _wampServer.Start(config => { });
@@ -215,7 +215,7 @@ namespace Fleck.Wamp.Tests
 
             var uri = new Uri(uriString);
 
-            _wampServer.AddSubcriptionChannel(uri);
+            _wampServer.AddSubscriptionChannel(uri);
 
             _wampServer.Start(config => { });
             _wampServer.Start(config => { });
@@ -257,7 +257,7 @@ namespace Fleck.Wamp.Tests
 
             var uri = new Uri(uriString);
 
-            _wampServer.AddSubcriptionChannel(uri);
+            _wampServer.AddSubscriptionChannel(uri);
 
             _wampServer.Start(config => { });
             _wampServer.Start(config => { });
@@ -300,7 +300,7 @@ namespace Fleck.Wamp.Tests
 
             var uri = new Uri(uriString);
 
-            _wampServer.AddSubcriptionChannel(uri);
+            _wampServer.AddSubscriptionChannel(uri);
 
             _wampServer.Start(config => { });
             _wampServer.Start(config => { });
@@ -343,7 +343,7 @@ namespace Fleck.Wamp.Tests
 
             var uri = new Uri(uriString);
 
-            _wampServer.AddSubcriptionChannel(uri);
+            _wampServer.AddSubscriptionChannel(uri);
 
             _wampServer.Start(config => { });
             _wampServer.Start(config => { });

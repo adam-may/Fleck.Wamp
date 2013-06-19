@@ -12,7 +12,6 @@ namespace Fleck.Wamp.Interfaces
         Action<PrefixMessage> OnPrefix { get; set; }
         Action<SubscribeMessage> OnSubscribe { get; set; }
         Action<UnsubscribeMessage> OnUnsubscribe { get; set; }
-        Action<PublishMessage> OnPublish { get; set; }
     }
 
 }
